@@ -1,15 +1,15 @@
 use crate::util::qr::QRError;
 use crate::util::Chomp;
 
-pub fn data(input: Vec<u8>, version: u32) -> Result<String, QRError> {
+pub fn data(input: Vec<u8>, version: u32) -> Result<Vec<u8>, QRError> {
     let mut chomp = Chomp::new(input);
-    let mut result = String::new();
+    let mut result = Vec::new();
 
     while let Some(mode) = chomp.chomp(4) {
         match mode {
-            0b0001 => result.push_str(numeric(&mut chomp, version)?.as_str()),
-            0b0010 => result.push_str(alphanumeric(&mut chomp, version)?.as_str()),
-            0b0100 => result.push_str(eight_bit(&mut chomp, version)?.as_str()),
+            0b0001 => result.append(&mut numeric(&mut chomp, version)?.into_bytes()),
+            0b0010 => result.append(&mut alphanumeric(&mut chomp, version)?.into_bytes()),
+            0b0100 => result.append(&mut eight_bit(&mut chomp, version)?),
             0b0000 => break,
             _ => {
                 return Err(QRError {
@@ -134,7 +134,7 @@ fn alphanumeric(chomp: &mut Chomp, version: u32) -> Result<String, QRError> {
     Ok(result)
 }
 
-fn eight_bit(chomp: &mut Chomp, version: u32) -> Result<String, QRError> {
+fn eight_bit(chomp: &mut Chomp, version: u32) -> Result<Vec<u8>, QRError> {
     let length_bits = match version {
         1..=9 => 8,
         10..=26 => 16,
@@ -164,29 +164,7 @@ fn eight_bit(chomp: &mut Chomp, version: u32) -> Result<String, QRError> {
 
     debug!("EIGHT BIT RAW {:?}", result);
 
-    let mut may_be_utf8 = false;
-
-    for r in &result {
-        if *r == 0xC3 {
-            may_be_utf8 = true;
-            break;
-        }
-    }
-
-    let final_result = if may_be_utf8 {
-        let utf8 = String::from_utf8(result)?;
-        debug!("EIGHT BIT AS UTF-8 {:?}", utf8);
-        utf8
-    } else {
-        let mut iso88591 = String::new();
-        for r in result {
-            iso88591.push(r as char);
-        }
-        debug!("EIGHT BIT AS ISO 8859-1 {:?}", iso88591);
-        iso88591
-    };
-
-    Ok(final_result)
+    Ok(result)
 }
 
 fn read_bits(chomp: &mut Chomp, bits: u8) -> Result<u8, QRError> {

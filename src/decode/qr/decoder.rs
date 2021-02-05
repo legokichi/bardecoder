@@ -23,8 +23,8 @@ impl QRDecoder {
     }
 }
 
-impl Decode<QRData, String, QRError> for QRDecoder {
-    fn decode(&self, data: Result<QRData, QRError>) -> Result<String, QRError> {
+impl Decode<QRData, Vec<u8>, QRError> for QRDecoder {
+    fn decode(&self, data: Result<QRData, QRError>) -> Result<Vec<u8>, QRError> {
         let qr_data = data?;
 
         let format = super::format::format(&qr_data)?;
@@ -60,8 +60,8 @@ impl QRDecoderWithInfo {
     }
 }
 
-impl Decode<QRData, (String, QRInfo), QRError> for QRDecoderWithInfo {
-    fn decode(&self, data: Result<QRData, QRError>) -> Result<(String, QRInfo), QRError> {
+impl Decode<QRData, (Vec<u8>, QRInfo), QRError> for QRDecoderWithInfo {
+    fn decode(&self, data: Result<QRData, QRError>) -> Result<(Vec<u8>, QRInfo), QRError> {
         let qr_data = data?;
 
         let format = super::format::format(&qr_data)?;

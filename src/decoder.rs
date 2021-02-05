@@ -58,7 +58,7 @@ impl<IMG, PREPD, RESULT> Decoder<IMG, PREPD, RESULT> {
 /// * decode: QRDecoder
 ///
 /// This is meant to provide a good balance between speed and accuracy
-pub fn default_decoder() -> Decoder<DynamicImage, GrayImage, String> {
+pub fn default_decoder() -> Decoder<DynamicImage, GrayImage, Vec<u8>> {
     default_builder().build()
 }
 
@@ -72,7 +72,7 @@ pub fn default_decoder() -> Decoder<DynamicImage, GrayImage, String> {
 /// * decode: QRDecoderWithInfo
 ///
 /// This is meant to provide a good balance between speed and accuracy
-pub fn default_decoder_with_info() -> Decoder<DynamicImage, GrayImage, (String, QRInfo)> {
+pub fn default_decoder_with_info() -> Decoder<DynamicImage, GrayImage, (Vec<u8>, QRInfo)> {
     default_builder_with_info().build()
 }
 
@@ -160,7 +160,7 @@ impl<IMG, PREPD, RESULT> DecoderBuilder<IMG, PREPD, RESULT> {
 /// * decode: QRDecoder
 ///
 /// The builder can then be customised before creating the Decoder
-pub fn default_builder() -> DecoderBuilder<DynamicImage, GrayImage, String> {
+pub fn default_builder() -> DecoderBuilder<DynamicImage, GrayImage, Vec<u8>> {
     let mut db = DecoderBuilder::new();
 
     db.prepare(Box::new(BlockedMean::new(5, 7)));
@@ -180,7 +180,7 @@ pub fn default_builder() -> DecoderBuilder<DynamicImage, GrayImage, String> {
 /// * decode: QRDecoderWithInfo
 ///
 /// The builder can then be customised before creating the Decoder
-pub fn default_builder_with_info() -> DecoderBuilder<DynamicImage, GrayImage, (String, QRInfo)> {
+pub fn default_builder_with_info() -> DecoderBuilder<DynamicImage, GrayImage, (Vec<u8>, QRInfo)> {
     let mut db = DecoderBuilder::new();
 
     db.prepare(Box::new(BlockedMean::new(5, 7)));
