@@ -276,6 +276,18 @@ fn determine_perspective(
     Ok(Perspective::new(dx, delta, dy, Delta { dx: 0.0, dy: 0.0 }))
 }
 
+fn is_valid(image: &GrayImage, p: &Point) -> bool {
+    let (w, h) = image.dimensions();
+    if p.x.round() < 0.0
+        || p.y.round() < 0.0
+        || (p.x.round() as u32) >= w
+        || (p.y.round() as u32) >= h
+    {
+        return false;
+    }
+    return true;
+}
+
 fn is_alignment(prepared: &GrayImage, p: Point, dx: Delta, dy: Delta, scale: f64) -> bool {
     if p.x < 0.0 || p.y < 0.0 {
         return false;
@@ -291,11 +303,11 @@ fn is_alignment(prepared: &GrayImage, p: Point, dx: Delta, dy: Delta, scale: f64
         for i in -2..3 {
             for j in -2..3 {
                 let pp = p + f64::from(i) * dx + f64::from(j) * dy;
-		let x = pp.x.round() as u32;
-		let y = pp.y.round() as u32;
-		if x < img.width() && y < img.height() {
-	                img.put_pixel(x, y, Rgb([255, 0, 0]));
-		}
+                let x = pp.x.round() as u32;
+                let y = pp.y.round() as u32;
+                if x < img.width() && y < img.height() {
+                    img.put_pixel(x, y, Rgb([255, 0, 0]));
+                }
             }
         }
 
@@ -315,24 +327,19 @@ fn is_alignment(prepared: &GrayImage, p: Point, dx: Delta, dy: Delta, scale: f64
         }
     }
 
-    let top_left = p - 2.0 * dx - 2.0 * dy;
-    if top_left.x < 0.0 || top_left.y < 0.0 {
-        return false;
-    }
-
-    let bottom_right = p + 2.0 * dx + 2.0 * dy;
-    let dims = prepared.dimensions();
-    if bottom_right.x > f64::from(dims.0) || bottom_right.y > f64::from(dims.1) {
-        return false;
-    }
-
     for x in -2..2 {
         let twice_up = p - f64::from(x) * dx - 2.0 * dy;
+        if !is_valid(&prepared, &twice_up) {
+            return false;
+        }
         if prepared.get_pixel(twice_up.x.round() as u32, twice_up.y.round() as u32)[0] == 255 {
             return false;
         }
 
         let twice_down = p - f64::from(x) * dx + 2.0 * dy;
+        if !is_valid(&prepared, &twice_down) {
+            return false;
+        }
         if prepared.get_pixel(twice_down.x.round() as u32, twice_down.y.round() as u32)[0] == 255 {
             return false;
         }
@@ -340,37 +347,58 @@ fn is_alignment(prepared: &GrayImage, p: Point, dx: Delta, dy: Delta, scale: f64
 
     for y in -1..1 {
         let twice_left = p - 2.0 * dx - f64::from(y) * dy;
+        if !is_valid(&prepared, &twice_left) {
+            return false;
+        }
         if prepared.get_pixel(twice_left.x.round() as u32, twice_left.y.round() as u32)[0] == 255 {
             return false;
         }
 
         let twice_right = p + 2.0 * dx - f64::from(y) * dy;
+        if !is_valid(&prepared, &twice_right) {
+            return false;
+        }
         if prepared.get_pixel(twice_right.x.round() as u32, twice_right.y.round() as u32)[0] == 255
         {
             return false;
         }
 
         let left = p - dx - f64::from(y) * dy;
+        if !is_valid(&prepared, &left) {
+            return false;
+        }
         if prepared.get_pixel(left.x.round() as u32, left.y.round() as u32)[0] == 0 {
             return false;
         }
 
-        let right = p - dx + f64::from(y) * dy;
+        let right = p - dx - f64::from(y) * dy;
+        if !is_valid(&prepared, &right) {
+            return false;
+        }
         if prepared.get_pixel(right.x.round() as u32, right.y.round() as u32)[0] == 0 {
             return false;
         }
     }
 
     let up = p - dy;
+    if !is_valid(&prepared, &up) {
+        return false;
+    }
     if prepared.get_pixel(up.x.round() as u32, up.y.round() as u32)[0] == 0 {
         return false;
     }
 
     let down = p + dy;
+    if !is_valid(&prepared, &down) {
+        return false;
+    }
     if prepared.get_pixel(down.x.round() as u32, down.y.round() as u32)[0] == 0 {
         return false;
     }
 
+    if !is_valid(&prepared, &p) {
+        return false;
+    }
     prepared.get_pixel(p.x.round() as u32, p.y.round() as u32)[0] == 0
 }
 
