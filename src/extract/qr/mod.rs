@@ -31,6 +31,14 @@ impl QRExtractor {
     }
 }
 
+fn safe_get_pixel(image: &image::ImageBuffer<image::Luma<u8>, Vec<u8>>, x: u32, y: u32) -> u8 {
+    if x < image.width() && y < image.height() {
+        image.get_pixel(x, y)[0]
+    } else {
+        0
+    }
+}
+
 impl Extract<GrayImage, QRLocation, QRData, QRError> for QRExtractor {
     fn extract(&self, prepared: &GrayImage, loc: QRLocation) -> Result<QRData, QRError> {
         let size = 17 + loc.version * 4;
@@ -55,7 +63,7 @@ impl Extract<GrayImage, QRLocation, QRData, QRError> for QRExtractor {
             for _ in 0..size {
                 let x = line.x.round() as u32;
                 let y = line.y.round() as u32;
-                let pixel = prepared.get_pixel(x, y)[0];
+                let pixel = safe_get_pixel(&prepared, x, y);
 
                 #[cfg(feature = "debug-images")]
                 {
@@ -185,14 +193,14 @@ fn determine_perspective(
     let mut left_x = 0;
     let mut right_x = prepared.dimensions().0;
     for x in (0..al_x).rev() {
-        if prepared.get_pixel(x, al_y)[0] == 255 {
+        if safe_get_pixel(&prepared, x, al_y) == 255 {
             left_x = x;
             break;
         }
     }
 
     for x in al_x..prepared.dimensions().0 {
-        if prepared.get_pixel(x, al_y)[0] == 255 {
+        if safe_get_pixel(&prepared, x, al_y) == 255 {
             right_x = x;
             break;
         }
@@ -207,14 +215,14 @@ fn determine_perspective(
     let mut bottom_y = prepared.dimensions().1;
 
     for y in (0..al_y).rev() {
-        if prepared.get_pixel(al_x, y)[0] == 255 {
+        if safe_get_pixel(&prepared, al_x, y) == 255 {
             top_y = y;
             break;
         }
     }
 
     for y in al_y..prepared.dimensions().1 {
-        if prepared.get_pixel(al_x, y)[0] == 255 {
+        if safe_get_pixel(&prepared, al_x, y) == 255 {
             bottom_y = y;
             break;
         }
